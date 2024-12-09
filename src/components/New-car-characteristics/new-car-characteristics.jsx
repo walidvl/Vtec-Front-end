@@ -1,12 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useReducer, useEffect, useState } from "react";
 import axios from "axios";
+
 const NewCarCharacteristics = () => {
+
+  const handleAddCharacteristic = (state, action) => {
+    const index = state.indexOf(action)
+    if (index > -1) {
+      const arr =state.filter((_, index) => _ != action)
+      return arr
+    }
+    return [...state, action]
+    
+  }
+
     const [characteristics, setCharacteristics] = useState([]);
+    const [addCharacteristic, setAddCharacteristic] = useReducer(handleAddCharacteristic, [])
+
     useEffect(() => {
         const fetchData = async () => {
           try {
             const response = await axios.get("http://127.0.0.1:8000/api/vehicles-characteristics");
-            console.log("Vehicle Data: ", response.data);
             setCharacteristics(response.data.characteristics);
           } catch (error) {
             console.error("Error fetching vehicle data", error);
@@ -83,13 +96,15 @@ const NewCarCharacteristics = () => {
               return (
                 <div
                   key={option.characteristic_id}
-                  className="col-lg-3 col-md-4 col-4 mb-3 mr-5 p-1 d-flex align-items-center butn curve"
+                  className={`col-lg-3 col-md-4 col-4 mb-3 mr-5 p-1 d-flex align-items-center butn curve ${addCharacteristic.find((element) => element == option.characteristic_id) && "bg-dark"}`}
                   style={{ backgroundColor: "#2b2d42", color: "white" }}
+                  onClick={() => setAddCharacteristic(option.characteristic_id)}
+                  
                 >
                   <div className="">
                     {/* Dynamically set the image source based on the sanitized characteristic name */}
                     <img
-                     src={`/img/caroptions/${sanitizedImageName}.png`}
+                      src={`/img/caroptions/${sanitizedImageName}.png`}
                       alt={option.characteristic_name}
                       className="img-fluid"
                     />

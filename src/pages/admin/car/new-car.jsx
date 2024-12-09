@@ -48,8 +48,8 @@ const NewBlogDetailsLight = () => {
         paragraph="Alle aktuellen Auto und Veranstaltungen unseres kreativen Teams."
       />
       <AddDetails/>
-<NewCar/>
-<NewCarCharacteristics/>
+      <NewCar/>
+      <NewCarCharacteristics/>
       <Footer />
     </LightTheme>
   );

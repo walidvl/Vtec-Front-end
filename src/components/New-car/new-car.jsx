@@ -9,6 +9,8 @@ const NewCar = () => {
   const [engines, setEngines] = useState([]);
   const [ecus, setEcus] = useState([]);
   const [generations, setGenerations] = useState([]);
+  
+  // vehicle tuning
   const [tunings, setTunings] = useState([]);
 
   // Fetch data from backend on component mount
@@ -16,7 +18,6 @@ const NewCar = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get("http://127.0.0.1:8000/api/vehiclesinfos");
-        console.log("Vehicle Data: ", response.data);
         setCategories(response.data.categories);
         setBrands(response.data.brands);
         setModels(response.data.models);
@@ -24,7 +25,6 @@ const NewCar = () => {
         setEngines(response.data.engines);
         setGenerations(response.data.generations);
         setTunings(response.data.tuning);
-        setCharacteristics(response.data.characteristics);
       } catch (error) {
         console.error("Error fetching vehicle data", error);
       }
@@ -36,12 +36,9 @@ const NewCar = () => {
   // Handle form submission
   const handleSubmit = async (values) => {
     try {
-      console.log("Vehicle Created: ", values);
-      // Make the API call to create a new vehicle if needed
-      // const response = await axios.post("your-api-endpoint", values);
-      // console.log("Vehicle Created: ", response.data);
+      const response = await axios.post("http://localhost:8000/api/vehicle/create", values);
     } catch (error) {
-      console.error("Error creating vehicle:", error);
+      console.error("Error creating vehicle:", error.message);
     }
   };
 
@@ -59,6 +56,7 @@ const NewCar = () => {
       <h2>Neues Fahrzeug anlegen</h2>
       <Formik
         initialValues={{
+          //vehicle details
           vehicle_name: "",
           vehicle_fuel: "",
           vehicle_category: "",
@@ -69,11 +67,27 @@ const NewCar = () => {
           vehicle_generation: "",
           vehicle_standard_power: "",
           vehicle_standard_torque: "",
+          vehicle_cylinder: "",
+          vehicle_bore: "",
+          vehicle_compression: "",
+
+          // vehicle tuning
+          vehicle_tuning: "",
+
+          // vehicle data chart
           vehicle_data_oem_power_chart: "",
           vehicle_data_oem_torque_chart: "",
           vehicle_data_rpm: "",
+
+          // vehicle tuning details
+          vehicle_tuning_difference_power: "",
+          vehicle_tuning_difference_torque: "",
+          vehicle_tuning_max_power: "",
+          vehicle_tuning_max_torque: "",
           vehicle_tuning_power_chart: "",
           vehicle_tuning_torque_chart: "",
+
+          // vehicle characteristics
           vehicle_characteristics: [],
         }}
         validate={(values) => {
@@ -81,6 +95,9 @@ const NewCar = () => {
           if (!values.vehicle_name) errors.vehicle_name = "Vehicle name is required";
           if (!values.vehicle_fuel) errors.vehicle_fuel = "Fuel type is required";
           if (!values.vehicle_category) errors.vehicle_category = "Category is required";
+          if (!values.vehicle_compression) errors.vehicle_compression = "Compression is required";
+          if (!values.vehicle_bore) errors.vehicle_bore = "Bore is required";
+          if (!values.vehicle_cylinder) errors.vehicle_cylinder = "Cylinder is required";
           if (!values.vehicle_model) errors.vehicle_model = "Model is required";
           if (!values.vehicle_brand) errors.vehicle_brand = "Brand is required";
           if (!values.vehicle_engine) errors.vehicle_engine = "Engine is required";
@@ -126,7 +143,7 @@ const NewCar = () => {
         onSubmit={handleSubmit}
       >
         {({ values, errors, touched, setFieldValue }) => (
-          <Form>
+          <Form className="d-flex flex-column column-gap-3 mt-4" style={{gap: "1rem"}}>
             <div className="row">
               <div className="col-4">
                 <label>Category</label>
@@ -151,8 +168,41 @@ const NewCar = () => {
               {/* Fuel Type */}
               <div className="col-4">
                 <label>Fuel Type</label>
-                <Field type="text" name="vehicle_fuel" className="form-control" />
+                <Field as="select" name="vehicle_fuel" className="form-control">
+                    <option value="">Select Fuel Type</option>
+                    <option value="Diesel">
+                      Diesel
+                    </option>
+                    <option value="Petrol">
+                      Petrol
+                    </option>
+                    <option value="Hybrid">
+                      Hybrid
+                    </option>
+                </Field>
                 <ErrorMessage name="vehicle_fuel" component="div" className="text-danger" />
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-4">
+                <label>Bore</label>
+                <Field type="text" name="vehicle_bore" className="form-control"/>
+                <ErrorMessage name="vehicle_bore" component="div" className="text-danger" />
+              </div>
+
+              {/* Vehicle Compression */}
+              <div className="col-4">
+                <label>Compression</label>
+                <Field type="text" name="vehicle_compression" className="form-control"/>
+                <ErrorMessage name="vehicle_compression" component="div" className="text-danger" />
+              </div>
+
+              {/* Fuel Cylinder */}
+              <div className="col-4">
+                <label>Cylinder</label>
+                <Field type="text" name="vehicle_cylinder" className="form-control"/>
+                <ErrorMessage name="vehicle_cylinder" component="div" className="text-danger" />
               </div>
             </div>
 
@@ -231,7 +281,7 @@ const NewCar = () => {
               {/* Tuning */}
               <div className="col-4">
                 <label>Tuning</label>
-                <Field as="select" name="vehicle_Tuning" className="form-control">
+                <Field as="select" name="vehicle_tuning" className="form-control">
                   <option value="">Select Tuning</option>
                   {sortOptions(tunings, 'tuning_name').map((tuning) => (
                     <option key={tuning.tuning_id} value={tuning.tuning_id}>
@@ -259,40 +309,66 @@ const NewCar = () => {
 
             {/* Vehicle Data Charts */}
             <div className="row">
-              <div className="col-4">
-                <label>OEM Power Chart</label>
-                <Field type="text" name="vehicle_data_oem_power_chart" className="form-control" />
-                <ErrorMessage name="vehicle_data_oem_power_chart" component="div" className="text-danger" />
+                <div className="col-4">
+                  <label>OEM Power Chart</label>
+                  <Field type="text" name="vehicle_data_oem_power_chart" className="form-control" />
+                  <ErrorMessage name="vehicle_data_oem_power_chart" component="div" className="text-danger" />
+                </div>
+
+                <div className="col-4">
+                  <label>OEM Torque Chart</label>
+                  <Field type="text" name="vehicle_data_oem_torque_chart" className="form-control" />
+                  <ErrorMessage name="vehicle_data_oem_torque_chart" component="div" className="text-danger" />
+                </div>
+
+                <div className="col-4">
+                  <label>RPM</label>
+                  <Field type="text" name="vehicle_data_rpm" className="form-control" />
+                  <ErrorMessage name="vehicle_data_rpm" component="div" className="text-danger" />
+                </div>
               </div>
 
-              <div className="col-4">
-                <label>OEM Torque Chart</label>
-                <Field type="text" name="vehicle_data_oem_torque_chart" className="form-control" />
-                <ErrorMessage name="vehicle_data_oem_torque_chart" component="div" className="text-danger" />
+              <div className="row">
+                <div className="col-4">
+                  <label>Tuning Power Chart</label>
+                  <Field type="text" name="vehicle_tuning_power_chart" className="form-control" />
+                  <ErrorMessage name="vehicle_tuning_power_chart" component="div" className="text-danger" />
+                </div>
+
+                <div className="col-4">
+                  <label>Tuning Torque Chart</label>
+                  <Field type="text" name="vehicle_tuning_torque_chart" className="form-control" />
+                  <ErrorMessage name="vehicle_tuning_torque_chart" component="div" className="text-danger" />
+                </div>
+
+                <div className="col-4">
+                  <label>Tuning Max Power</label>
+                  <Field type="number" name="vehicle_tuning_max_power" className="form-control" />
+                  <ErrorMessage name="vehicle_tuning_max_power" component="div" className="text-danger" />
+                </div>
               </div>
 
-              <div className="col-4">
-                <label>RPM</label>
-                <Field type="text" name="vehicle_data_rpm" className="form-control" />
-                <ErrorMessage name="vehicle_data_rpm" component="div" className="text-danger" />
-              </div>
-            </div>
+              <div className="row row-gap-3">
+                <div className="col-4">
+                  <label>Tuning Max Torque</label>
+                  <Field type="number" name="vehicle_tuning_max_torque" className="form-control" />
+                  <ErrorMessage name="vehicle_tuning_max_torque" component="div" className="text-danger" />
+                </div>
 
-            <div className="row">
-              <div className="col-4">
-                <label>Tuning Power Chart</label>
-                <Field type="text" name="vehicle_tuning_power_chart" className="form-control" />
-                <ErrorMessage name="vehicle_tuning_power_chart" component="div" className="text-danger" />
+                <div className="col-4">
+                  <label>Tuning Difference Torque</label>
+                  <Field type="number" name="vehicle_tuning_difference_torque" className="form-control" />
+                  <ErrorMessage name="vehicle_tuning_difference_torque" component="div" className="text-danger" />
+                </div>
+
+                <div className="col-4">
+                  <label>Tuning Difference Power</label>
+                  <Field type="number" name="vehicle_tuning_difference_power" className="form-control" />
+                  <ErrorMessage name="vehicle_tuning_difference_power" component="div" className="text-danger" />
+                </div>
               </div>
 
-              <div className="col-4">
-                <label>Tuning Torque Chart</label>
-                <Field type="text" name="vehicle_tuning_torque_chart" className="form-control" />
-                <ErrorMessage name="vehicle_tuning_torque_chart" component="div" className="text-danger" />
-              </div>
-              </div>
-
-            <div className="row">
+              <div className="row">
               <div className="col-12">
                 <button type="submit" className="btn btn-primary">Submit</button>
               </div>
